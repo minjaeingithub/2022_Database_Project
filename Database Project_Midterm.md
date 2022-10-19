@@ -153,3 +153,69 @@ MySQL는 InnoDB storage engine을 사용하고 있다. 위 사진은 InnoDB 구�
 
 ## Buffer pool configuration
 
+> Lab experiment를 떠올려보자. Buffer size, scan depth size를 my.cnf 파일에서 변경할 수 있었다.
+
+1. **Buffer pool size**
+
+   - 바꿀 수 있었던 변수 :
+
+      ```innodb_buffer_pool_size ```
+
+     ``` innodb_buffer_pool_chunk_size ```
+
+     ​	buffer pool is allocated in chunks.
+
+      So,  ```innodb_buffer_pool_size ``` = ``` innodb_buffer_pool_chunk_size ``` * ```innodb_buffer_pool_instances```
+
+   - ```innodb_buffer_pool_instance ``` = # of cores * 2
+
+     buffer pool을 separate instances들로 나누면, 병행으로 데이터 접근이 가능해진다. 즉, 다른 쓰레드가 같은 페이지에 r/w하는 트랜잭션 간 lock contention 을 줄일 수 있다.
+
+     **나눠진 buffer pool instance들은 각각 free list, flush list, LRU list를 가지고 있다.(후술)**
+
+2. **Scan resistant Buffer Pool**
+
+   ``` innodb_old_blocks_time```: specifies the time window after the first access to a page during which it can be accessed w/o being moved to the front(most recently used end) of LRU list.
+
+   ```innodb_old_blocks_pct```: specifies the approximate percentage of the InnoDB buffer pool used for the old block sub-list
+
+3. **Buffer Pool prefetching**
+
+   **Read-ahead**: 곧 필요할 것 같은 page들을 buffer pool에서 **비동기적**으로 미리 가져오도록 하는 I/O request이다.
+
+   > <Methods>
+   >
+   > Linear : buffer pool에 있는 순서대로 접근
+   >
+   > ​	<code>innodb_read_ahead_threshold </code>		
+   >
+   > ​	: controls how sensitive InnoDB is in detecting patterns of sequential page access	
+   >
+   > Random: page access order에 상관없이, 이미 buffer pool에 있는 페이지를 바탕으로, 어떤 페이지가 필요할 지 예측
+   >
+   > ​	<code> innodb_random_read_ahead </code>
+   >
+   > ​		: random read-ahead feature를 사용할 수 있도록 한다.
+
+4. **Buffer Pool Flushing**
+
+   Buffer Pool의 dirty page는 **background thread**에 의해 flush 된다.
+
+   <code> innodb_lru_scan_depth </code>
+
+   : # of. page flushed in LRU tail by the page cleaner thread
+
+   - 백그라운드로 돌고 있는 page_cleaner_thread가 버퍼풀의 LRU list 중 dirty page를 얼마나 많이 disk로 내릴지(==scan depth) 정하는 옵션이다.
+
+   - 주로 버퍼풀이 큰 상황에서, 평소 I/O load를 감당할 정도라면 늘려도 좋지만, I/O 용량을 상회한다면, 설정을 낮추는 것이 좋다. (Default = 1024)
+
+## Buffer Pool Monitoring Method
+
+``` sql
+SHOW ENGINE INNODB STATUS
+```
+
+![img](https://velog.velcdn.com/images/rhtaegus17/post/674255b0-9e45-4c2f-abd4-18584c03843d/image.png)
+
+
+
