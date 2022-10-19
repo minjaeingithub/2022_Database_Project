@@ -107,6 +107,8 @@ Buffer에 요청한 페이지가 없다면: replacement policy에 따라 victim 
 
 ![img](https://velog.velcdn.com/images/rhtaegus17/post/62418544-31e3-4eec-bc6c-ef1c820f1101/image.png)
 
+> 괄호안의 이름은 디렉토리 명이다.
+
 MySQL는 InnoDB storage engine을 사용하고 있다. 위 사진은 InnoDB 구조이며, 자체적으로 메인 메모리 안에 데이터 캐싱과 인덱싱을 위한 버퍼 풀을 관리한다.
 
 
@@ -216,6 +218,50 @@ SHOW ENGINE INNODB STATUS
 ```
 
 ![img](https://velog.velcdn.com/images/rhtaegus17/post/674255b0-9e45-4c2f-abd4-18584c03843d/image.png)
+
+## Lists of Buffer Blocks
+
+Buffer block 에 있는 list는 총 3가지가 있다.
+
+1. **Free List**
+
+   free buffer frame을 저장한다. page read request가 오면 바로 여기에 있는 버퍼 프레임부터 읽는다.
+
+2. **LRU List **
+
+   all the blocks holding a file page. 여기에는 모든 파일들이 다 있고, victim 선정할 때 이 곳에서, page가 결정된다.
+
+3. **Flush List**
+
+   buffer pool 내에 dirty page를 찾기 위한 목적의 내부 InnoDB 데이터 구조이다. 
+
+
+
+## Buffer Miss Scenario
+
+Buffer miss 가 났을 때 어떤 일이 벌어지는지 알아보자.
+
+0. foreground user가 read(Pa) 라는 요청을 보냈지만, Pa가 버퍼풀에 없어 miss가 발생한 상황이다.
+
+1. 처음으로는 바로 사용할 수 있는 free list에서 빈 버퍼 프레임을 찾는다. 그러나 free list에 clean page가 없는 상황이다.
+2. 그 다음 후보인 clean page를 찾기 위해 LRU list의 tail부터 찾아본다. Tail에서부터 찾는 이유는 LRU 알고리즘 때문이고, clean page부터 찾는 이유는 dirty page의 경우 추가적인 disk I/O이 필요하기 때문이다.
+3. 설정한 LRU scan depth에 clean page가 없다면, 가장 마지막에 있는 dirty page를 flush한 후 disk 에서 요청한 Pa를 읽으면 transaction이 끝난다.
+
+### Getting Free blocks by page cleaner thread
+
+위의 3. 과 같이 free block을 기다리지 않고, page cleaner thread가 백그라운드에서 비동기적으로 만들어주는 free block을 사용할 수도 있다. 과정을 살펴보자.
+
+1. Page cleaner thread는 LRU list에 있는 dirty page를 초 단위로 disk에 비동기적으로 write한다(flush).
+
+   - dirty page의 양은 <code> innodb_lru_scan_depth </code>로 설정할 수 있다.
+
+2. 이렇게 free buffer frame이 생기고, 새로 생긴 free buffer frame 을 free list에 붙인다. 그리하여 foreground user 는 free list를 사용할 수 있게 된다. 
+
+   ![img](https://velog.velcdn.com/images/rhtaegus17/post/19dcad2d-58df-4e43-8b17-e7baecb3746e/image.png)
+
+## Code Review
+
+> 실제로 코드에서는 어떻게 구현되어있는지 살펴보자.
 
 
 
