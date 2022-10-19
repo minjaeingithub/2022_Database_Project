@@ -86,3 +86,6 @@ readrandomwriterandom : 53.084 micros/op 18838 ops/sec; ( reads:10172700 writes:
 
 **해석**
 
+- `micros/op`: Microseconds spent processing one operation
+- `ops/sec`: Processed operations per second
+- readandwriterandom: benchmark type
