@@ -263,5 +263,28 @@ Buffer miss 가 났을 때 어떤 일이 벌어지는지 알아보자.
 
 > 실제로 코드에서는 어떻게 구현되어있는지 살펴보자.
 
+![img](https://velog.velcdn.com/images/rhtaegus17/post/92125cab-9cba-4766-9532-61a24b2f2e5f/image.png)
 
+LRU_get_free_block의 함수에 구현되어있다.
 
+![img](https://velog.velcdn.com/images/rhtaegus17/post/ac8383d0-9b4c-4cb9-8250-bed3790e2756/image.png)
+
+free buffer frame을 얻을 때까지 loop을 돈다. 우선 mutex를 먼저 획득하고, free block 이 있는지 찾게 된다. 있으면, if문이 true가 되므로, mutex를 반납하고, block을 반환한다. free block을 찾지 못하면, step2로 넘어간다.
+
+![img](https://velog.velcdn.com/images/rhtaegus17/post/0a09ccf7-a003-4246-a6f6-5dcc350dbae4/image.png)
+
+LRU list의 tail부터 clean page를 찾게 된다. 찾으면(<code>if(freed)</code>), 그 buffer frame을 free list로 보낸다. 다시 step1을 반복한다.
+
+![img](https://velog.velcdn.com/images/rhtaegus17/post/ca563dfd-e849-4bb1-b801-fb21ed0a78da/image.png)
+
+page cleaner thread가 비동기적으로 free buffer frame을 만들도록 thread sleep을 하고, scan depth만큼 free block을 만들어내는 작업을 한다.
+
+![img](https://velog.velcdn.com/images/rhtaegus17/post/b02fe16b-813d-4585-aa1d-3a4b11f27b85/image.png)
+
+flush 되지 않으면, LRU tail에 있는 single dirty page를 victim으로 선정하여 flush한다. dirty page를 flush해야하면, 추가적인 시간이 더 소요된다.
+
+## Buffer Pool Mutex
+
+single buffer pool instance 는 하나의 mutex를 가지고 있다.
+
+buffer pool-> mutex는 메인 메모리의 hot spot이다. 따라서, memory bus traffic이 생기게 된다. 그렇기 때문에, buffer block이나 buffer instance를 바꾸고 싶다면, mutex를 먼저 획득한 후 변경하고, release해야한다.
