@@ -227,7 +227,7 @@ Buffer block 에 있는 list는 총 3가지가 있다.
 
    free buffer frame을 저장한다. page read request가 오면 바로 여기에 있는 버퍼 프레임부터 읽는다.
 
-2. **LRU List **
+2. **LRU List**
 
    all the blocks holding a file page. 여기에는 모든 파일들이 다 있고, victim 선정할 때 이 곳에서, page가 결정된다.
 
