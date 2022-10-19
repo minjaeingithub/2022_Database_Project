@@ -85,3 +85,42 @@ MySQL의 경우, 1 Byte modification은 1 page write을 발생시킨다(4KB~16KB
 
 ### RocksDB Compaction
 
+#### Compaction이란, 같은 key에 대한 multiple copies를 제거, SST file을 더 큰 SST file로 merge하는 것이다.
+
+두 가지 방법을 지원한다. (1) Leveled compaction, (2) Universal compaction
+
+**1. Leveled compaction**
+
+<img src="/Users/jominjae/Library/Application Support/typora-user-images/image-20221019142335332.png" alt="image-20221019142335332" style="zoom:50%;" />
+
+SST file은 여러 level로 구성된다. 
+
+L0은 memtable에서 flush된 file들을 저장한다. 
+
+각 level은(L0 제외) 정렬된 데이터의 연속이고, 내부에는 데이터가 여러 SST file로 범위가 나누어져있다.
+0이 아닌 모든 level에는 타겟 크기가 있는데, compaction의 목표는 level의 크기를 타겟 크기보다 작게 만드는 것이다.
+compaction은 L0의 파일 수가 특정 숫자를 넘었을 때 발생하고, L0의 파일들은 L1에 merge된다. 일반적으로 L0의 파일들은 key값이 겹치기 때문에, 모든 L0 파일들은 compaction 대상 파일로 선택해야 한다.
+
+DB의 data는 multiple levels로 구성돼있음, 각 레벨의 타겟 크기는 이전 레벨보다 10배 크다.
+	recent data -> L0
+	oldest data -> Lmax
+L0: overlapping keys, **flush time**으로 정렬 돼있음
+L1 ~ Lmax: Non-overlapping keys, **key**로 정렬 돼있음
+
+
+
+**2. Univeral Compaction**
+
+- write-heavy workload에서, level compaction은 **병목현상**이 발생함.
+- universal compaction은 write amplification을 줄이기 위해 고안 됨.
+- universal compaction에선 모든 files는 L0에 **time order**로 정리되어있음.
+- universal compaction은 일시적으로 amplification size를 증가시킴(space amplification을 잠시 높인다.)
+
+1. 시간순으로 인접한 few files를 pick
+
+2. pick up한 few files를 merge
+
+3. **L0의 new file로** 교체함
+
+   
+
