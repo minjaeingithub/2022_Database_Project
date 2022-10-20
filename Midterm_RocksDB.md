@@ -39,11 +39,11 @@ SSTable은 주기적으로 merge한다(후술)
 
 ​	update/delete 레코드가 이전 데이터들을 overwrite/remove하게 된다.
 
-<img src="/Users/jominjae/Desktop/Screen Shot 2022-10-19 at 1.46.37 PM.png" alt="Screen Shot 2022-10-19 at 1.46.37 PM" style="zoom:50%;" />
+<img src="/Users/jominjae/Desktop/Screen Shot 2022-10-19 at 1.46.37 PM.png" alt="LSM tree" style="zoom:50%;" />
 
 ## B+ tree vs. Log Structured Merge tree (LSM tree)
 
-<img src="/Users/jominjae/Desktop/Screen Shot 2022-10-19 at 1.53.13 PM.png" alt="Screen Shot 2022-10-19 at 1.53.13 PM" style="zoom:50%;" />
+<img src="/Users/jominjae/Desktop/Screen Shot 2022-10-19 at 1.53.13 PM.png" alt="in vs. out place update" style="zoom:50%;" />
 
 #### B+ tree
 
@@ -51,7 +51,7 @@ SSTable은 주기적으로 merge한다(후술)
 
 #### LSM-Tree
 
-<img src="/Users/jominjae/Desktop/Screen Shot 2022-10-19 at 1.53.21 PM.png" alt="Screen Shot 2022-10-19 at 1.53.21 PM" style="zoom:50%;" />
+<img src="/Users/jominjae/Desktop/Screen Shot 2022-10-19 at 1.53.21 PM.png" alt="LSM tree update method" style="zoom:50%;" />
 
 **out-of-place update** 방식(그림의 (b))으로 업데이트한다. Logical tree를 여러 개의 물리적인 piece들로 나누는 작업이며, 가장 최신에 새로 업데이트된 데이터도 메모리의 트리구조에 남게 된다. 즉, logfile(메타데이터)과 memtable을 사용하여 random write을 sequential write로 바꾸기 때문에 더 빠르다. 
 
@@ -68,11 +68,11 @@ MySQL DBMS의 인덱스 데이터 구조는 B+ tree를 채택하고 있다. 고�
 ### the lower, the better!
 
 $$
-Write\:Amplification = {number\:of\:physical\:writes\:to\:flash\:memory \over number\:of\:logical\:writes\:from\:the\:host}
+Write\:Amplification = {number\ of\ physical\ writes\ to\ flash\ memory \over number\ of\ logical\ writes\ from\ the\ host}
 $$
 
 $$
-Space\:Amplification = {The\:size\:of\:database \over The\:size\:of\:the\:data\:in\:the\:database}
+Space\ Amplification = {The\ size\ of\ database \over The\ size\ of\ the\ data\ in\ the\ database}
 $$
 
 MySQL의 경우, 1 Byte modification은 1 page write을 발생시킨다(4KB~16KB).
@@ -91,7 +91,7 @@ MySQL의 경우, 1 Byte modification은 1 page write을 발생시킨다(4KB~16KB
 
 **1. Leveled compaction**
 
-<img src="/Users/jominjae/Library/Application Support/typora-user-images/image-20221019142335332.png" alt="image-20221019142335332" style="zoom:50%;" />
+<img src="/Users/jominjae/Library/Application Support/typora-user-images/image-20221019142335332.png" alt="leveled compaction" style="zoom:50%;" />
 
 SST file은 여러 level로 구성된다. 
 

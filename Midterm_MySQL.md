@@ -140,16 +140,16 @@ MySQL는 InnoDB storage engine을 사용하고 있다. 위 사진은 InnoDB 구�
   > - 자주 접근되는 hot page가 buffer pool에 계속 남겨지는 것을 보장하기 위해
   > - never accessed again 의 특성을 가지는 버퍼 풀 스캔이 buffer pool에 저장되는 양을 최소화하고, buffer pool 변동을 최소화하기 위해
 
-  ![img](https://velog.velcdn.com/images/rhtaegus17/post/a03ededc-8970-42ab-bd3f-69ca14588dde/image.png)
+  <img src="https://velog.velcdn.com/images/rhtaegus17/post/a03ededc-8970-42ab-bd3f-69ca14588dde/image.png" alt="img" style="zoom:50%;" />
 
   	1. Page read request가 들어오면, 제일 먼저 midpoint에 삽입된다(Midpoint insertion).
-
-      > Read-ahead/Large scan/where절 없는 select쿼리 등은 스캔하는 동안 한 번 접근되고 다시 접근되지 않는 특성을 가지고 있기 때문에, new sublist 의 head에 추가되면, old sublist 의 tail로 가기까지 오랜 시간이 걸려, 버퍼 풀을 낭비하게 되는 것이기 때문이다.	
-
+  	
+  	> Read-ahead/Large scan/where절 없는 select쿼리 등은 스캔하는 동안 한 번 접근되고 다시 접근되지 않는 특성을 가지고 있기 때문에, new sublist 의 head에 추가되면, old sublist 의 tail로 가기까지 오랜 시간이 걸려, 버퍼 풀을 낭비하게 되는 것이기 때문이다.	
+  	
   	2. Page HIT가 일어나면
-
-      * Old sub-list : 페이지를 new sublist head로 옮긴다.
-      * New sub-list : 페이지가 new sublist head에서 특정 거리만큼 떨어져 있으면, head로 옮긴다.
+  	
+  	* Old sub-list : 페이지를 new sublist head로 옮긴다.
+  	* New sub-list : 페이지가 new sublist head에서 특정 거리만큼 떨어져 있으면, head로 옮긴다.
 
 ​		3. Least Recently Used pages는 리스트의 tail로 가고, evicted 된다.
 
