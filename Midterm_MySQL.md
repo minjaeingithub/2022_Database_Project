@@ -94,7 +94,7 @@ Buffer에 요청한 페이지가 없다면: replacement policy에 따라 victim 
 - 더티한 페이지라면, 우선 디스크에 변경된 사항을 적용하여 write를 하고, 요청된 페이지를 victim buffer frame에 올려놓고, 해당 프레임 주소를 반환한다.
 
 > $$
-> Hit\:Ratio = {number\: of\: hits \over number\:of\:page\:requests}
+> Hit\ Ratio = {number\ of\ hits \over number\ of\ page\ requests}
 > $$
 >
 > 
